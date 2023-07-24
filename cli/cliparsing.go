@@ -14,6 +14,7 @@ func ParseFlags() *CliFlags {
 	flagInterval := pflag.Float32P("interval", "n", 2.0, "seconds to wait between updates, in steps of 0.1")
 	flagVersion := pflag.BoolP("version", "v", false, "display version information and exits.")
 	flagHelp := pflag.BoolP("help", "h", false, "display this help and exits")
+
 	pflag.Parse()
 
 	flags := &CliFlags{
