@@ -1,18 +1,18 @@
-PROJECT_NAME	:= gowatcher
+PROJECT_NAME := gowatcher
 
 ifeq (, $(shell which go))
 $(error "No 'go' binary in $(PATH), consider rechecking your dev environment setup")
 endif
-GO_BIN			:= go
+GO_BIN   := go
 
-PROJECT_DIR		:= $(CURDIR)
-BIN_NAME 		:= $(PROJECT_NAME)
-GO_MODULE_NAME	:= git.int.kn/ibdev_go/$(PROJECT_NAME)
+PROJECT_DIR  := $(CURDIR)
+BIN_NAME   := $(PROJECT_NAME)
+GO_MODULE_NAME := git.int.kn/ibdev_go/$(PROJECT_NAME)
 
 
 mainfilename := $(shell printf '%s' "${PROJECT_NAME}" | tr A-Z a-z)
 
-PROJECT_BUILD_DIR	:= $(PROJECT_DIR)/build
+PROJECT_BUILD_DIR := $(PROJECT_DIR)/build
 
 .DEFAULT_GOAL := build
 
@@ -22,7 +22,7 @@ GO_ARGS=
 TEST_VERBOSE=
 .PHONY: test
 test:
-	$(GO_BIN) test $(if $(GO_ARGS),$(GO_ARGS) )$(if $(TEST_VERBOSE), -v )$(if $(TEST_PACKAGE), $(TEST_PACKAGE), $(PROJECT_DIR)/...) $(if $(TEST_CASE), -run "^$(TEST_CASE)$$", )
+	@$(GO_BIN) test $(if $(GO_ARGS),$(GO_ARGS) )$(if $(TEST_VERBOSE), -v )$(if $(TEST_PACKAGE), $(TEST_PACKAGE), $(PROJECT_DIR)/...) $(if $(TEST_CASE), -run "^$(TEST_CASE)$$", )
 
 
 .PHONY: build
@@ -39,5 +39,5 @@ run: build
 	@$(PROJECT_BUILD_DIR)/$(BIN_NAME) $(if $(RUN_ARGS),$(RUN_ARGS))
 
 
-$(PROJECT_BUILD_DIR): 
+$(PROJECT_BUILD_DIR):
 	@mkdir -m755 $@
