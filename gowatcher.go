@@ -10,5 +10,6 @@ func main() {
 	fmt.Println("hello gowatcher")
 
 	flags := cli.ParseFlags()
+
 	fmt.Printf("%v\n", flags)
 }
