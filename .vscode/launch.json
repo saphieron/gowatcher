@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Package",
+            "name": "Launch main",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${fileDirname}"
+            "program": "gowatcher.go",
+            "cwd": "${workspaceFolder}",
+            "args": ["-h"]
+        },
+        {
+            "name": "Launch current file",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
         }
     ]
 }
