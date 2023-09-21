@@ -5,14 +5,19 @@ $(error "No 'go' binary in $(PATH), consider rechecking your dev environment set
 endif
 GO_BIN   := go
 
+ifeq (, $(shell which mockery))
+$(error "No 'mockery' binary in $(PATH), consider installing https://github.com/vektra/mockery")
+endif
+MOCKERY_BIN   := mockery
+
 PROJECT_DIR  := $(CURDIR)
 BIN_NAME   := $(PROJECT_NAME)
 GO_MODULE_NAME := git.int.kn/ibdev_go/$(PROJECT_NAME)
-
+PROJECT_BUILD_DIR := $(PROJECT_DIR)/build
 
 mainfilename := $(shell printf '%s' "${PROJECT_NAME}" | tr A-Z a-z)
 
-PROJECT_BUILD_DIR := $(PROJECT_DIR)/build
+
 
 .DEFAULT_GOAL := build
 
@@ -41,3 +46,13 @@ run: build
 
 $(PROJECT_BUILD_DIR):
 	@mkdir -m755 $@
+
+.PHONY: cover
+cover: $(PROJECT_BUILD_DIR)
+	@$(GO_BIN) test -cover -covermode=count -coverprofile=$(PROJECT_BUILD_DIR)/profile.cov \
+	$(if $(TEST_FILES), $(TEST_FILES), ./...)
+	@$(GO_BIN) tool cover -func $(PROJECT_BUILD_DIR)/profile.cov
+
+.PHONY: mock
+mock:
+	$(MOCKERY_BIN)

@@ -1,1 +1,18 @@
 package executor
+
+import (
+	"io"
+)
+
+type CommandExecutor interface {
+	CombinedOutput() ([]byte, error)
+	Environ() []string
+	Output() ([]byte, error)
+	Run() error
+	Start() error
+	StderrPipe() (io.ReadCloser, error)
+	StdinPipe() (io.WriteCloser, error)
+	StdoutPipe() (io.ReadCloser, error)
+	String() string
+	Wait() error
+}
