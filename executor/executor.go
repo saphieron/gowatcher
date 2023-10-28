@@ -4,6 +4,7 @@ import (
 	"io"
 )
 
+// Simplistic interface to abstract away the direct os level process exec api
 type CommandExecutor interface {
 	CombinedOutput() ([]byte, error)
 	Environ() []string

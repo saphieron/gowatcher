@@ -1,5 +1,7 @@
 PROJECT_NAME := gowatcher
 
+VERSION := v0.0.1
+
 ifeq (, $(shell which go))
 $(error "No 'go' binary in $(PATH), consider rechecking your dev environment setup")
 endif
@@ -17,8 +19,6 @@ PROJECT_BUILD_DIR := $(PROJECT_DIR)/build
 
 mainfilename := $(shell printf '%s' "${PROJECT_NAME}" | tr A-Z a-z)
 
-
-
 .DEFAULT_GOAL := test
 
 TEST_PACKAGE=
@@ -30,13 +30,17 @@ test:
 	@$(GO_BIN) test $(if $(GO_ARGS),$(GO_ARGS) )$(if $(TEST_VERBOSE), -v )$(if $(TEST_PACKAGE), $(TEST_PACKAGE), $(PROJECT_DIR)/...) $(if $(TEST_CASE), -run "^$(TEST_CASE)$$", )
 
 
+# go build -ldflags="-X 'main.Version=v1.0.0'"
+RELEASE:=
+INJECT_LOCATION:=github.com/saphieron/gowatcher/loop.Version
+VERSION_INJECT:=-ldflags='-X "$(INJECT_LOCATION)=$(VERSION)"'
 .PHONY: build
 build: $(PROJECT_BUILD_DIR)
 	@printf "Compiling '%s' to '$(PROJECT_BUILD_DIR)/$(BIN_NAME)'\n" $(PROJECT_DIR)/$(mainfilename).go
-	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/$(BIN_NAME) $(PROJECT_DIR)/$(mainfilename).go
+	@$(GO_BIN) build $(if $(RELEASE),$(VERSION_INJECT),) -o $(PROJECT_BUILD_DIR)/$(BIN_NAME) $(PROJECT_DIR)/$(mainfilename).go
 	@printf "Done\n"
 
-defaultRunArgs:=-n0.5 "ls -la"
+defaultRunArgs:=-v -n0.5 "ls -la"
 RUN_ARGS=$(defaultRunArgs)
 .PHONY: run
 run: build
