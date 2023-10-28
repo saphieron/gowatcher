@@ -36,21 +36,24 @@ func TestParseFlagsSuite(t *testing.T) {
 }
 
 func (suite *ParseFlagsSuite) TestSettingInterval() {
-	fakeCliArgs := []string{"myBin", "-n", "999"}
+	fakeCliArgs := []string{"myBin", "-n", "999", "\"ls -la\""}
 	os.Args = fakeCliArgs
 
-	options := cli.ParseFlags()
+	options, rest := cli.ParseFlags()
 
 	suite.asserter.Equal(float32(999.0), options.Interval)
+	suite.asserter.Contains(rest, fakeCliArgs[len(fakeCliArgs)-1])
 }
 
 func (suite *ParseFlagsSuite) TestDefaultValues() {
 	fakeCliArgs := []string{"myBin"}
 	os.Args = fakeCliArgs
 
-	options := cli.ParseFlags()
+	options, rest := cli.ParseFlags()
 
 	suite.asserter.Equal(float32(2), options.Interval)
 	suite.asserter.False(options.Help)
 	suite.asserter.False(options.Version)
+
+	suite.asserter.Empty(rest)
 }

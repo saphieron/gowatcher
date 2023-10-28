@@ -9,7 +9,8 @@ import (
 func main() {
 	fmt.Println("hello gowatcher")
 
-	flags := cli.ParseFlags()
+	flags, rest := cli.ParseFlags()
 
 	fmt.Printf("%v\n", flags)
+	fmt.Printf("rest args %v\n", rest)
 }
