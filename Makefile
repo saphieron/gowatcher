@@ -19,7 +19,7 @@ mainfilename := $(shell printf '%s' "${PROJECT_NAME}" | tr A-Z a-z)
 
 
 
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL := test
 
 TEST_PACKAGE=
 TEST_CASE=
@@ -36,7 +36,8 @@ build: $(PROJECT_BUILD_DIR)
 	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/$(BIN_NAME) $(PROJECT_DIR)/$(mainfilename).go
 	@printf "Done\n"
 
-RUN_ARGS=
+defaultRunArgs:=-n0.5 "ls -la"
+RUN_ARGS=$(defaultRunArgs)
 .PHONY: run
 run: build
 	@chmod +x $(PROJECT_BUILD_DIR)/$(BIN_NAME)
