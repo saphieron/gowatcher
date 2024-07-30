@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"strings"
+	"time"
+
 	"github.com/spf13/pflag"
 )
 
 type CliFlags struct {
-	Interval float32
+	Interval time.Duration
 	Version  bool
 	Help     bool
 }
@@ -18,10 +21,34 @@ func ParseFlags() (*CliFlags, []string) {
 	pflag.Parse()
 
 	flags := &CliFlags{
-		Interval: *flagInterval,
+		Interval: time.Duration(*flagInterval * float32(time.Second)),
 		Version:  *flagVersion,
 		Help:     *flagHelp,
 	}
-	remainingArgs := pflag.Args()
-	return flags, remainingArgs
+	commandPart := pflag.Args()
+	if len(commandPart) == 1 {
+		singleElementCommand := commandPart[0]
+		if strings.HasPrefix(singleElementCommand, "\"") && strings.HasSuffix(singleElementCommand, "\"") {
+			singleElementCommand = singleElementCommand[1:]
+			singleElementCommand = singleElementCommand[:len(singleElementCommand)-1]
+		}
+		commandPart = tokenize(singleElementCommand)
+	}
+	return flags, commandPart
+}
+
+func PrintHelp() {
+	pflag.Usage()
+}
+
+func tokenize(s string) []string {
+	quoted := false
+
+	return strings.FieldsFunc(s, func(r rune) bool {
+		if r == '"' {
+			quoted = !quoted
+		}
+		return !quoted && r == ' '
+	})
+
 }

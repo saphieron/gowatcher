@@ -36,7 +36,7 @@ build: $(PROJECT_BUILD_DIR)
 	@$(GO_BIN) build -o $(PROJECT_BUILD_DIR)/$(BIN_NAME) $(PROJECT_DIR)/$(mainfilename).go
 	@printf "Done\n"
 
-defaultRunArgs:=-n0.5 "ls -la"
+defaultRunArgs:=-n3 "ls -la"
 RUN_ARGS=$(defaultRunArgs)
 .PHONY: run
 run: build
