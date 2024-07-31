@@ -15,6 +15,6 @@ func TestLoopFake(t *testing.T) {
 		time.Sleep(time.Second)
 		cancel()
 	}()
-	looper.Start("ls", "-la")
+	looper.Do("ls", "-la")
 
 }

@@ -25,7 +25,7 @@ func NewLooper(interval time.Duration, ctx context.Context) *Looper {
 	return looper
 }
 
-func (looper *Looper) Start(command string, commandArgs ...string) error {
+func (looper *Looper) Do(command string, commandArgs ...string) error {
 	defer logging.ErrorLog.Printf("finished loop")
 	looper.wg = new(sync.WaitGroup)
 	looper.wg.Add(1)
@@ -33,16 +33,19 @@ func (looper *Looper) Start(command string, commandArgs ...string) error {
 
 	go looper.executeLoop(command, commandArgs, errorChan)
 
+	for err := range errorChan {
+		logging.ErrorLog.Printf("loop encountered error: %v", err)
+	}
 	looper.wg.Wait()
 	logging.ErrorLog.Printf("finished waiting")
-	select {
-	case err := <-errorChan:
-		if err != nil {
-			return err
-		}
-	default:
-		// nothing to do
-	}
+	// select {
+	// case err := <-errorChan:
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// default:
+	// 	// nothing to do
+	// }
 	return nil
 }
 
@@ -58,7 +61,6 @@ func (looper *Looper) executeLoop(command string, commandArgs []string, errorCha
 		case <-looper.ctx.Done():
 			running = false
 		default:
-			// err = exec.Run()
 			err = printOutput(exec)
 			if err != nil {
 				wrapErrorAndReportIt("looped failed to extract command's output: %w", err, errorChan)
@@ -69,12 +71,11 @@ func (looper *Looper) executeLoop(command string, commandArgs []string, errorCha
 
 		looper.waitIfNecessary(startingTime)
 	}
-	logging.ErrorLog.Printf("exited looping")
+	close(errorChan)
 }
 
 func wrapErrorAndReportIt(wrapText string, err error, c chan error) {
 	wrappedErr := fmt.Errorf(wrapText, err)
-	logging.ErrorLog.Printf(wrappedErr.Error())
 	c <- wrappedErr
 }
 
@@ -95,10 +96,11 @@ func (looper *Looper) waitIfNecessary(startingTime time.Time) {
 	execTime := time.Since(startingTime)
 	if execTime < looper.interval {
 		remainingTime := looper.interval - execTime
-		logging.ErrorLog.Printf("remaining time was %v", remainingTime)
+		after := time.After(remainingTime)
+		done := looper.ctx.Done()
 		select {
-		case <-looper.ctx.Done():
-		case <-time.After(remainingTime):
+		case <-done:
+		case <-after:
 		}
 	}
 }

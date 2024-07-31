@@ -35,8 +35,9 @@ func Run() {
 
 	ctx := prepareSignalCancelContex()
 	looper := loop.NewLooper(flags.Interval, ctx)
-	err := looper.Start(command, commandArgs)
+	err := looper.Do(command, commandArgs...)
 	if err != nil {
+		logging.ErrorLog.Printf("looper ran into error: '%s'", err.Error())
 		os.Exit(1)
 	}
 }
