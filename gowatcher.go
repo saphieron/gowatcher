@@ -33,7 +33,7 @@ func Run() {
 		commandArgs = rest[1:]
 	}
 
-	ctx := prepareSignalCancelContex()
+	ctx, _ := prepareSignalCancelContex()
 	looper := loop.NewLooper(flags.Interval, ctx)
 	err := looper.Do(command, commandArgs...)
 	if err != nil {
@@ -41,18 +41,19 @@ func Run() {
 		os.Exit(1)
 	}
 }
+
 func printVersion() {
 	fmt.Println("TODO: make a help message")
 }
 
-func prepareSignalCancelContex() context.Context {
+func prepareSignalCancelContex() (context.Context, context.CancelFunc) {
 	servChannel := make(chan os.Signal, 1)
 	signal.Notify(servChannel, os.Interrupt)
 	newCtx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-servChannel
-		logging.ErrorLog.Print("cancelling via interrupt")
+		logging.ErrorLog.Printf("Received os interrupt")
 		cancel()
 	}()
-	return newCtx
+	return newCtx, cancel
 }
