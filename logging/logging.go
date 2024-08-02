@@ -1,12 +1,18 @@
 package logging
 
 import (
-	"log"
+	"log/slog"
 	"os"
 )
 
-var ErrorLog log.Logger
+var programLevel = new(slog.LevelVar) // Info by default
 
-func Init() {
-	ErrorLog = *log.New(os.Stderr, "gowatcher: ", 0)
+func Init(verbose bool) {
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	slog.SetDefault(logger)
+	if verbose {
+		programLevel.Set(slog.LevelDebug)
+	} else {
+		programLevel.Set(slog.LevelWarn)
+	}
 }

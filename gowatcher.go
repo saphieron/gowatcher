@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 
@@ -13,12 +14,13 @@ import (
 
 func main() {
 	Run()
+	// Render()
 }
 
 func Run() {
-	logging.Init()
 
 	flags, rest := cli.ParseFlags()
+	logging.Init(flags.Verbose)
 	if flags.Help {
 		cli.PrintHelp()
 		return
@@ -37,9 +39,10 @@ func Run() {
 	looper := loop.NewLooper(flags.Interval, ctx)
 	err := looper.Do(command, commandArgs...)
 	if err != nil {
-		logging.ErrorLog.Printf("looper ran into error: '%s'", err.Error())
+		slog.Error("Looper ran into error", "error", err.Error())
 		os.Exit(1)
 	}
+	slog.Info("Exiting")
 }
 
 func printVersion() {
@@ -52,7 +55,7 @@ func prepareSignalCancelContex() (context.Context, context.CancelFunc) {
 	newCtx, cancel := context.WithCancel(context.Background())
 	go func() {
 		<-servChannel
-		logging.ErrorLog.Printf("Received os interrupt")
+		slog.Warn("Received os interrupt")
 		cancel()
 	}()
 	return newCtx, cancel

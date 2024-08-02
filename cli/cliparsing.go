@@ -11,12 +11,14 @@ type CliFlags struct {
 	Interval time.Duration
 	Version  bool
 	Help     bool
+	Verbose  bool
 }
 
 func ParseFlags() (*CliFlags, []string) {
 	flagInterval := pflag.Float32P("interval", "n", 2.0, "seconds to wait between updates, in steps of 0.1")
 	flagVersion := pflag.BoolP("version", "v", false, "display version information and exits.")
 	flagHelp := pflag.BoolP("help", "h", false, "display this help and exits")
+	flagVerbose := pflag.BoolP("verbose", "V", false, "report additional debugging information to STDERR")
 
 	pflag.Parse()
 
@@ -24,6 +26,7 @@ func ParseFlags() (*CliFlags, []string) {
 		Interval: time.Duration(*flagInterval * float32(time.Second)),
 		Version:  *flagVersion,
 		Help:     *flagHelp,
+		Verbose:  *flagVerbose,
 	}
 	commandPart := pflag.Args()
 	if len(commandPart) == 1 {

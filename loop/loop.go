@@ -3,13 +3,13 @@ package loop
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"sync"
 	"time"
 
 	"github.com/saphieron/gowatcher/executor"
 	"github.com/saphieron/gowatcher/liberrors"
-	"github.com/saphieron/gowatcher/logging"
 )
 
 type Looper struct {
@@ -40,7 +40,7 @@ func (looper *Looper) Do(command string, commandArgs ...string) error {
 	select {
 	case err := <-resultErrorChan:
 		if err != nil {
-			logging.ErrorLog.Printf("loop execution encountered errors: %s", err.Error())
+			slog.Error("Execution encountered error", "error", err.Error())
 		}
 		return err
 	default:
@@ -50,6 +50,7 @@ func (looper *Looper) Do(command string, commandArgs ...string) error {
 
 func (looper *Looper) schedule(command string, commandArgs []string, outChan chan<- executor.CommandExecutor) {
 	defer looper.wg.Done()
+	slog.Debug("Starting schedule loop", "command", command, "commandArgs", commandArgs)
 	running := true
 	for running {
 		exec := executor.NewCommandExecutorWithContext(looper.ctx, command, commandArgs...)
@@ -58,13 +59,18 @@ func (looper *Looper) schedule(command string, commandArgs []string, outChan cha
 		select {
 		case <-looper.ctx.Done():
 			running = false
+			slog.Debug("Received Cancel", "context", "process loop")
+			continue
 		case <-after:
+			slog.Debug("Waiting finished")
 		}
 	}
+	slog.Info("Finished schedule loop")
 }
 
 func (looper *Looper) process(inChan <-chan executor.CommandExecutor, errorChan chan<- error) {
 	defer looper.wg.Done()
+	slog.Debug("Starting loop processor")
 	running := true
 	var exec executor.CommandExecutor
 	for running {
@@ -72,15 +78,18 @@ func (looper *Looper) process(inChan <-chan executor.CommandExecutor, errorChan 
 		case exec = <-inChan:
 		case <-looper.ctx.Done():
 			running = false
+			slog.Debug("Received Cancel", "context", "process loop")
 			continue
 		}
 		err := printOutput(exec)
 		if err != nil {
+			slog.Debug("Encountered error with command", "error", err)
 			wrapErrorAndReportIt("looped processor encountered error with command execution: %w", err, errorChan)
 			running = false
 			continue
 		}
 	}
+	slog.Info("Finished process loop")
 }
 
 func (looper *Looper) errorCollector(errorChan <-chan error, resultErrChan chan<- error) {
@@ -92,15 +101,18 @@ func (looper *Looper) errorCollector(errorChan <-chan error, resultErrChan chan<
 		select {
 		case <-looper.ctx.Done():
 			running = false
+			slog.Debug("Received Cancel", "context", "error collector loop")
 		case loopErr := <-errorChan:
 			collection.AppendError(loopErr)
 			encounteredError = true
 		}
 	}
 	if encounteredError {
+		slog.Debug("Sending error collection to main routine", "errors", collection.Error())
 		resultErrChan <- collection
 	}
 	close(resultErrChan)
+	slog.Debug("Finished error collection loop")
 }
 
 // // we assume that the ctx used in the CommandExecutor listens to the same cancel as this one here.
