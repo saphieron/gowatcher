@@ -8,25 +8,25 @@ import (
 )
 
 type CliFlags struct {
-	Interval time.Duration
-	Version  bool
-	Help     bool
-	Verbose  bool
+	Interval     time.Duration
+	Version      bool
+	Help         bool
+	LoggingLevel uint8
 }
 
 func ParseFlags() (*CliFlags, []string) {
 	flagInterval := pflag.Float32P("interval", "n", 2.0, "seconds to wait between updates, in steps of 0.1")
-	flagVersion := pflag.BoolP("version", "v", false, "display version information and exits.")
+	flagVersion := pflag.BoolP("version", "v", false, "display version information and exits")
 	flagHelp := pflag.BoolP("help", "h", false, "display this help and exits")
-	flagVerbose := pflag.BoolP("verbose", "V", false, "report additional debugging information to STDERR")
+	flagLogging := pflag.Uint8P("logging", "L", 0, "enable logging, verbosity 1=least verbose to 4=most, default 0=off")
 
 	pflag.Parse()
 
 	flags := &CliFlags{
-		Interval: time.Duration(*flagInterval * float32(time.Second)),
-		Version:  *flagVersion,
-		Help:     *flagHelp,
-		Verbose:  *flagVerbose,
+		Interval:     time.Duration(*flagInterval * float32(time.Second)),
+		Version:      *flagVersion,
+		Help:         *flagHelp,
+		LoggingLevel: *flagLogging,
 	}
 	commandPart := pflag.Args()
 	if len(commandPart) == 1 {

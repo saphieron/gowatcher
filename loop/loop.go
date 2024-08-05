@@ -50,7 +50,7 @@ func (looper *Looper) Do(command string, commandArgs ...string) error {
 
 func (looper *Looper) schedule(command string, commandArgs []string, outChan chan<- executor.CommandExecutor) {
 	defer looper.wg.Done()
-	slog.Debug("Starting schedule loop", "command", command, "commandArgs", commandArgs)
+	slog.Debug("Starting loop", "context", "schedule", "command", command, "commandArgs", commandArgs)
 	running := true
 	for running {
 		exec := executor.NewCommandExecutorWithContext(looper.ctx, command, commandArgs...)
@@ -59,7 +59,7 @@ func (looper *Looper) schedule(command string, commandArgs []string, outChan cha
 		select {
 		case <-looper.ctx.Done():
 			running = false
-			slog.Debug("Received Cancel", "context", "process loop")
+			slog.Debug("Received Cancel", "context", "schedule")
 			continue
 		case <-after:
 			slog.Debug("Waiting finished")
@@ -70,7 +70,7 @@ func (looper *Looper) schedule(command string, commandArgs []string, outChan cha
 
 func (looper *Looper) process(inChan <-chan executor.CommandExecutor, errorChan chan<- error) {
 	defer looper.wg.Done()
-	slog.Debug("Starting loop processor")
+	slog.Debug("Starting loop", "context", "process")
 	running := true
 	var exec executor.CommandExecutor
 	for running {
@@ -78,12 +78,12 @@ func (looper *Looper) process(inChan <-chan executor.CommandExecutor, errorChan 
 		case exec = <-inChan:
 		case <-looper.ctx.Done():
 			running = false
-			slog.Debug("Received Cancel", "context", "process loop")
+			slog.Debug("Received Cancel", "context", "process")
 			continue
 		}
 		err := printOutput(exec)
 		if err != nil {
-			slog.Debug("Encountered error with command", "error", err)
+			slog.Debug("Encountered error with command", "context", "process", "error", err)
 			wrapErrorAndReportIt("looped processor encountered error with command execution: %w", err, errorChan)
 			running = false
 			continue
@@ -101,18 +101,18 @@ func (looper *Looper) errorCollector(errorChan <-chan error, resultErrChan chan<
 		select {
 		case <-looper.ctx.Done():
 			running = false
-			slog.Debug("Received Cancel", "context", "error collector loop")
+			slog.Debug("Received Cancel", "context", "error collector")
 		case loopErr := <-errorChan:
 			collection.AppendError(loopErr)
 			encounteredError = true
 		}
 	}
 	if encounteredError {
-		slog.Debug("Sending error collection to main routine", "errors", collection.Error())
+		slog.Debug("Sending error collection to main routine", "context", "error collector", "errors", collection.Error())
 		resultErrChan <- collection
 	}
 	close(resultErrChan)
-	slog.Debug("Finished error collection loop")
+	slog.Debug("Finished error collection loop", "context", "error collector")
 }
 
 // // we assume that the ctx used in the CommandExecutor listens to the same cancel as this one here.
