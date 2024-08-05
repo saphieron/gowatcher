@@ -13,21 +13,27 @@ import (
 )
 
 func main() {
-	Run()
+	if Run() != nil {
+		os.Exit(1)
+	}
 	// Render()
 }
 
-func Run() {
-
+func Run() error {
 	flags, rest := cli.ParseFlags()
-	logging.Init(flags.Verbose)
+	err := logging.Init(flags.LoggingLevel)
+	if err != nil {
+		os.Stderr.Write([]byte(err.Error() + "\n"))
+		return err
+	}
+
 	if flags.Help {
 		cli.PrintHelp()
-		return
+		return nil
 	}
 	if flags.Version {
 		printVersion()
-		return
+		return nil
 	}
 	command := rest[0]
 	var commandArgs []string
@@ -37,12 +43,13 @@ func Run() {
 
 	ctx, _ := prepareSignalCancelContex()
 	looper := loop.NewLooper(flags.Interval, ctx)
-	err := looper.Do(command, commandArgs...)
+	err = looper.Do(command, commandArgs...)
 	if err != nil {
 		slog.Error("Looper ran into error", "error", err.Error())
-		os.Exit(1)
+		return err
 	}
 	slog.Info("Exiting")
+	return nil
 }
 
 func printVersion() {
